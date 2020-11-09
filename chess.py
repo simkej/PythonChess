@@ -78,7 +78,17 @@ class game:
             if command == "stop":
                 self.playing = False
     
-        
+
+class piece:
+    def __init__(self, team):
+        if team == "black" or team == "white":
+            self.team = team
+        else:
+            print(team + " is not a valid team.")
+
+
+
+
 
 def main():
     b = board(8, 8)
@@ -87,3 +97,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
