@@ -14,6 +14,7 @@ class board:
                 self.set(x, y, piece("none"))
 
     def printBoard(self):
+        cls()
         for x in self.boardObj:
             line = ""
             for i in x:
@@ -113,13 +114,11 @@ class game:
 
 
     def whiteTurn(self):
-        cls()
         self.currentTeam = "white"
         self.board.printBoard()
         self.commandInput()
         
     def blackTurn(self):
-        cls()
         self.currentTeam = "black"
         self.board.printBoard()
         self.commandInput()
