@@ -82,6 +82,7 @@ class game:
 
             if command == "help":
                 print("move, moves a piece.\nstop, exits the program")
+                input()
 
             if command == "stop":
                 self.playing = False
