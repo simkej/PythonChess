@@ -7,9 +7,16 @@ class board:
 
         self.boardObj = make2dList(self.xSize, self.ySize)
 
+        for y in range(0, self.ySize):
+            for x in range(0, self.xSize):
+                self.set(x, y, piece("none"))
+
     def printBoard(self):
         for x in self.boardObj:
-            print(x)
+            line = ""
+            for i in x:
+                line += i.symbol
+            print(line)
 
     def set(self, xPos, yPos, value):
         self.boardObj[yPos][xPos] = value
@@ -28,19 +35,19 @@ class game:
 
 
     def move(self, xOrg, yOrg, xNew, yNew):
-        piece = self.board.get(xOrg, yOrg)
-        self.board.set(xOrg, yOrg, 0)
-        self.board.set(xNew, yNew, piece)
+        movingPiece = self.board.get(xOrg, yOrg)
+        self.board.set(xOrg, yOrg, piece("none"))
+        self.board.set(xNew, yNew, movingPiece)
     
 
     def placeBlack(self):
         for y in range(0, 2):
             for x in range(0, self.board.xSize):
-                board.set(self.board, x, y, 1)
+                board.set(self.board, x, y, pawn("black"))
     def placeWhite(self):
         for y in range(self.board.ySize-2, self.board.ySize):
             for x in range(0, self.board.xSize):
-                board.set(self.board, x, y, 1)
+                board.set(self.board, x, y, pawn("white"))
 
 
     def startGame(self):
@@ -53,6 +60,7 @@ class game:
             self.board.printBoard()
 
             command = input("option(help): ")
+            
 
             if command == "move":
                 posOrg = input("original position(example: 0,1): ")
@@ -80,13 +88,16 @@ class game:
     
 
 class piece:
+
+    symbol = '0'
     def __init__(self, team):
-        if team == "black" or team == "white":
+        if team == "black" or team == "white" or team == "none":
             self.team = team
         else:
             print(team + " is not a valid team.")
 
-
+class pawn(piece):
+    symbol = 'P'
 
 
 
