@@ -15,22 +15,40 @@ class board:
 
     def printBoard(self):
         cls()
-        for x in self.boardObj:
+        for x in self.boardObj: #x = rad
             line = ""
             for i in x:
                 line += i.symbol
             print(line)
 
+    def printLegalMoves(self, moves):
+        #print(moves)
+        ursprBoard = []
+        for x in moves:
+            if self.get(int(x[0]),int(x[1])).symbol != 'X':
+                ursprBoard.append([int(x[0]),int(x[1]),self.get(int(x[0]),int(x[1])).symbol])
+               # print(ursprBoard)
+                self.get(int(x[0]),int(x[1])).symbol = 'X'
+        self.printBoard()
+        #print(ursprBoard)
+        for x in ursprBoard:
+            self.get(int(x[0]),int(x[1])).symbol = x[2]
+         #   print("bye simon")
+            
+
     def set(self, xPos, yPos, value):
         self.boardObj[yPos][xPos] = value
 
     def get(self, xPos, yPos):
-        return self.boardObj[yPos][xPos]
+        try:
+            return self.boardObj[yPos][xPos]
+        except IndexError:
+            return
 
 def make2dList(rows, cols):
     return [ ([0] * cols) for row in range(rows) ]
 
-def cls():
+def cls(): #Överflödig? Möjliggör att använda i Windows. Clear för unix.
     os.system('cls' if os.name=='nt' else 'clear')
 
 class game:
@@ -41,17 +59,33 @@ class game:
         self.currentTeam = "white"
 
 
-    def move(self, xOrg, yOrg, xNew, yNew):
-        movingPiece = self.board.get(xOrg, yOrg)
-        self.board.set(xOrg, yOrg, piece("none"))
-        self.board.set(xNew, yNew, movingPiece)
-    
+    def move(self, xOrg, yOrg, xNew, yNew):                 #Styr förflyttning av piece, tilldelar "none" till gamla position
+        legalmove = self.legalmove(xOrg, yOrg)
+        wantedmove = [xNew, yNew]
+        if wantedmove in legalmove:
+            movingPiece = self.board.get(xOrg, yOrg)            
+            self.board.set(xOrg, yOrg, piece("none"))
+            self.board.set(xNew, yNew, movingPiece)
+        else:
+            print("olagligt! ;S")
+                  
+    def legalmove(self, xOrg, yOrg):                        #Bestämmer lagliga moves för pieces
+        piece = self.board.get(xOrg, yOrg)
+        moves = []
+        for i in piece.movements:
+            if self.board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 :
+         #       print(i)
+                if self.board.get(xOrg+i[0],yOrg+i[1]).team == "none":
+                    moves.append([xOrg+i[0],yOrg+i[1]])
+               #     print(moves)
+        return moves
+                 
 
     def placeBlack(self):
-        for x in range(0, self.board.xSize):                #Places full row of pawns
+        for x in range(0, self.board.xSize):                #Places full row of black pawns
             board.set(self.board, x, 1, pawn("black"))
         
-        board.set(self.board, 0, 0, rook("black"))
+        board.set(self.board, 0, 0, rook("black"))          #Placerar resterande pieces
         board.set(self.board, 1, 0, knight("black"))
         board.set(self.board, 2, 0, bishop("black"))
         board.set(self.board, 3, 0, queen("black"))
@@ -63,12 +97,13 @@ class game:
 
 
     def placeWhite(self):
-        for x in range(0, self.board.xSize):                #Places full row of pawns
+        for x in range(0, self.board.xSize):                #Places full row of white pawns
             board.set(self.board, x, self.board.ySize-2, pawn("white"))
 
-        board.set(self.board, 0, 7, rook("white"))
+        board.set(self.board, 0, 7, rook("white"))          #Placerar resterande pieces
         board.set(self.board, 1, 7, knight("white"))
         board.set(self.board, 2, 7, bishop("white"))
+        #print(self.board.get(2,7))
         board.set(self.board, 3, 7, queen("white"))
         board.set(self.board, 4, 7, king("white"))
         board.set(self.board, 5, 7, bishop("white"))
@@ -80,6 +115,8 @@ class game:
             
         if command == "move":
             posOrg = input("original position(example: 0,1): ")
+            oldPos = posOrg.split(',')
+            self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1])))
             posNew = input("new position(example: 0,3): ")
 
             if ',' not in posOrg or ',' not in posNew:
@@ -87,7 +124,6 @@ class game:
                 input()
                 return
 
-            oldPos = posOrg.split(',')
             newPos = posNew.split(',')
 
             if self.board.get(int(oldPos[0]), int(oldPos[1])).team != self.currentTeam:
@@ -139,7 +175,7 @@ class game:
             
     
 
-class piece:
+class piece: #Kontrollerar färg, samt hjälper att rensa efter flyttning.
 
     symbol = '0'
     def __init__(self, team):
@@ -148,27 +184,57 @@ class piece:
         else:
             print(team + " is not a valid team.")
 
-    def isTeam(self, teamName):
+    def isTeam(self, teamName): #Eventuellt behövs inte, kan kanske implementeras. OKLÖRT
         return self.team == teamName
 
 class king(piece):
     symbol = 'K'
-
+    movements = []
+    for x in range(-1,2):
+        movements.append([0,x])
+        movements.append([x,0])
+        movements.append([x,x])
+        movements.append([x,-x])
+        movements.append([-x,x])
+        movements.append([-x,-x])
+        
 class queen(piece):
     symbol = 'Q'
+    movements = []
+    for x in range(-8,8):
+        movements.append([0,x])
+        movements.append([x,0])
+        movements.append([x,x])
+        movements.append([x,-x])
+        movements.append([-x,x])
+        movements.append([-x,-x])
 
 class rook(piece):
     symbol = 'R'
+    movements = []
+    for x in range(-8,8):    #fundera om förbättring, för att bli mer scaleable
+        movements.append([0,x])
+        movements.append([x,0])
+  #  print(movements)
 
 class bishop(piece):
     symbol = 'B'
+    movements = []
+    for x in range(-8,8): 
+        movements.append([x,x])
+        movements.append([x,-x])
+        movements.append([-x,x])
+        movements.append([-x,-x])
 
 class knight(piece):
     symbol = 'N'
+    movements = [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[2,-1],[-2,-1],[-2,1]]
+    print(movements)
 
 class pawn(piece):
     symbol = 'P'
-
+    movements = [[0,-1], [0,1]]
+    
 def main():
     b = board(8, 8)
     g = game(b)
