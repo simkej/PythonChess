@@ -130,7 +130,9 @@ class game:
                     self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1])))
                 else:
                     print("Inte din pjäs att flytta. -2")
+                    self.f()
             else:
+                print("Fel formattering, glöm inte ','")
                 self.f()
             
            # if ',' not in posOrg:
@@ -152,13 +154,13 @@ class game:
                 newPos = posNew.split(',')
                 try:
                     self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]))
-                #except IndexError:
-                 #   print("Värdet är utanför brädet. -4")
+                except IndexError:
+                    print("Värdet är utanför brädet. -4")
                   #  posNew = input("Positionen du vill flytta den till: ")
                 except ValueError:
                     print("Ogiltigt val. -5")
-                    #self.f()
-                    posNew = input("Positionen du vill flytta den till: ")
+                    self.f()
+                    #posNew = input("Positionen du vill flytta den till: ")
             else:
                 print("Ogiltigt val. -3")
                 self.f()
@@ -175,21 +177,17 @@ class game:
               #  self.f()
                 
 
-        if command == "help":                               #Visar instruktioner
+        elif command == "help":                               #Visar instruktioner
             print("'move', anger vilken pjäs du vill flytta och vart. \nförsta koordinaten anger kolonn och andra rad, räkning från 0 till 7. \nExempelvis väljs bonden framför vits kung genom '4,6'  \n'stop', avslutar programmet")
             oldPos = ''
             self.f()
 
-        if command == "stop":                               #Avslutar programmet
+        elif command == "stop":                               #Avslutar programmet
             self.playing = False
 
         else:
             print("Felaktigt val")
             self.f()
-
-    def help(self):
-        print("'move', anger vilken pjäs du vill flytta och vart. \nförsta koordinaten anger kolonn och andra rad, räkning från 0 till 7. \nExempelvis väljs bonden framför vits kung genom '4,6'  \n'stop', avslutar programmet")
-        return
 
     def VitTurn(self):                                      #Kontrollerar om det är vits tur att spela
         self.currentTeam = "vit"
