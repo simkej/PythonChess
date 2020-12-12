@@ -1,6 +1,8 @@
+'''P-uppgift, spelar schack'''
 import os
 
-class board:
+
+class board:                                                #Class för att skapa spelbrädet
 
     def __init__(self, xSize, ySize):
 
@@ -13,15 +15,15 @@ class board:
             for x in range(0, self.xSize):
                 self.set(x, y, piece("none"))
 
-    def printBoard(self):
+    def printBoard(self):                                   #Skriver ut brädet
         cls()
-        for x in self.boardObj: #x = rad
-            line = ""
+        for x in self.boardObj:
+            line = ""      
             for i in x:
                 line += i.symbol
             print(line)
 
-    def printLegalMoves(self, moves):
+    def printLegalMoves(self, moves):                       #Skriver ut möjliga drag som kan göras
         #print(moves)
         ursprBoard = []
         for x in moves:
@@ -33,33 +35,26 @@ class board:
         #print(ursprBoard)
         for x in ursprBoard:
             self.get(int(x[0]),int(x[1])).symbol = x[2]
-         #   print("bye simon")
+         #   print("bye")
             
 
-    def set(self, xPos, yPos, value):
-        self.boardObj[yPos][xPos] = value
-
-    def get(self, xPos, yPos):
+    def get(self, xPos, yPos):                              #Hämtar nuvarande position i lista
         try:
             return self.boardObj[yPos][xPos]
         except IndexError:
-            return
+            return #Fixa error-meddelande
 
-def make2dList(rows, cols):
-    return [ ([0] * cols) for row in range(rows) ]
-
-def cls(): #Överflödig? Möjliggör att använda i Windows. Clear för unix.
-    os.system('cls' if os.name=='nt' else 'clear')
+    def set(self, xPos, yPos, value):                       #Placerar ut ny position
+        self.boardObj[yPos][xPos] = value
 
 class game:
 
     def __init__(self, board):
 
         self.board = board
-        self.currentTeam = "white"
-
-
-    def move(self, xOrg, yOrg, xNew, yNew):                 #Styr förflyttning av piece, tilldelar "none" till gamla position
+        self.currentTeam = "vit"
+    
+    def move(self, xOrg, yOrg, xNew, yNew):                 #Förflyttar pjäs, mha get och set.
         legalmove = self.legalmove(xOrg, yOrg)
         wantedmove = [xNew, yNew]
         if wantedmove in legalmove:
@@ -67,129 +62,232 @@ class game:
             self.board.set(xOrg, yOrg, piece("none"))
             self.board.set(xNew, yNew, movingPiece)
         else:
-            print("olagligt! ;S")
-                  
+            print("Ej lagligt drag")
+            return False
+            
+
     def legalmove(self, xOrg, yOrg):                        #Bestämmer lagliga moves för pieces
         piece = self.board.get(xOrg, yOrg)
         moves = []
+        upptagen = []
+        motståndare = []
+        XY = []
+        Xy = []
+        xY = []
+        xy = []
+        x_y = []
+        x_Y = []
+        NewMoves = []
         for i in piece.movements:
+            if self.board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 and [xOrg,yOrg] != [xOrg+i[0],yOrg+i[1]]:
+                moves.append([xOrg+i[0],yOrg+i[1]])
+                moves.sort()
+
+                if self.board.get(xOrg+i[0],yOrg+i[1]).team != "none":
+                    if self.board.get(xOrg+i[0],yOrg+i[1]).team != self.currentTeam:
+                        motståndare.append([xOrg+i[0],yOrg+i[1]])
+                        
+                    if self.board.get(xOrg+i[0],yOrg+i[1]).team == self.currentTeam:
+                        upptagen.append([xOrg+i[0],yOrg+i[1]])
+
+        for i in piece.attack:
             if self.board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 :
-         #       print(i)
-                if self.board.get(xOrg+i[0],yOrg+i[1]).team == "none":
+               if self.board.get(xOrg+i[0],yOrg+i[1]).team != "none":
+                   if self.board.get(xOrg+i[0],yOrg+i[1]).team != self.currentTeam:
                     moves.append([xOrg+i[0],yOrg+i[1]])
-               #     print(moves)
+
+        for pos in moves:
+            if [xOrg] > [pos[0]]:
+                if [yOrg] > [pos[1]]:
+                    XY.append(pos)
+                if [yOrg] < [pos[1]]:
+                    Xy.append(pos)
+            if [xOrg] < [pos[0]]:
+                if [yOrg] > [pos[1]]:
+                    xY.append(pos)
+                if [yOrg] < [pos[1]]:
+                    xy.append(pos)
+            else:
+                if [yOrg] > [pos[1]]:
+                    x_Y.append(pos)
+                if [yOrg] < [pos[1]]:
+                    x_y.append(pos)
+
+        XY.sort()
+        Xy.sort()
+        xY.sort()
+        xy.sort()
+        x_Y.sort()
+        x_y.sort()
+                    
+        NewMoves += self.kolla(xOrg, yOrg, XY[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, Xy[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, xY, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, xy, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, x_Y, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, x_y[::-1], motståndare, upptagen)
+        
+        moves = NewMoves
         return moves
-                 
 
-    def placeBlack(self):
-        for x in range(0, self.board.xSize):                #Places full row of black pawns
-            board.set(self.board, x, 1, pawn("black"))
-        
-        board.set(self.board, 0, 0, rook("black"))          #Placerar resterande pieces
-        board.set(self.board, 1, 0, knight("black"))
-        board.set(self.board, 2, 0, bishop("black"))
-        board.set(self.board, 3, 0, queen("black"))
-        board.set(self.board, 4, 0, king("black"))
-        board.set(self.board, 5, 0, bishop("black"))
-        board.set(self.board, 6, 0, knight("black"))
-        board.set(self.board, 7, 0, rook("black"))
+    def kolla(self, xOrg, yOrg, li, motståndare, upptagen):
+        NewMoves = []
+        for pos in li:
+            if pos in motståndare:
+                NewMoves.append(pos)
+                break
+            if pos in upptagen:
+                break
+            else:
+                NewMoves.append(pos)
+        return NewMoves
 
-
-
-    def placeWhite(self):
-        for x in range(0, self.board.xSize):                #Places full row of white pawns
-            board.set(self.board, x, self.board.ySize-2, pawn("white"))
-
-        board.set(self.board, 0, 7, rook("white"))          #Placerar resterande pieces
-        board.set(self.board, 1, 7, knight("white"))
-        board.set(self.board, 2, 7, bishop("white"))
-        #print(self.board.get(2,7))
-        board.set(self.board, 3, 7, queen("white"))
-        board.set(self.board, 4, 7, king("white"))
-        board.set(self.board, 5, 7, bishop("white"))
-        board.set(self.board, 6, 7, knight("white"))
-        board.set(self.board, 7, 7, rook("white"))
-        
-    def commandInput(self):
-        command = input("option("+self.currentTeam+"): ")
+    def isCheckMate(self):
+        Hot = []
+        HotMove = []
+        x = -1
+        y = -1
+        for brede in self.board.boardObj:
+            y += 1
+            x = -1
+            for piece in brede:
+                x += 1
+                if piece.team != self.currentTeam and piece.team != "none":
+                    Hot.append([x,y])
+                if piece.team == self.currentTeam:
+                    continue
+        for piece in Hot:
+            HotMove += self.legalmove(piece[0],piece[1])
             
-        if command == "move":
-            posOrg = input("original position(example: 0,1): ")
-            oldPos = posOrg.split(',')
-            self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1])))
-            posNew = input("new position(example: 0,3): ")
 
-            if ',' not in posOrg or ',' not in posNew:
-                print("Invalid syntax.")
-                input()
-                return
-
-            newPos = posNew.split(',')
-
-            if self.board.get(int(oldPos[0]), int(oldPos[1])).team != self.currentTeam:
-                print("WRONG TEAM SUCKA")
-                input()
-                return
+        
                 
-            try:
-                self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]))
-            except IndexError:
-                print("Value is larger than the board.")
-                input()
-            except ValueError:
-                print("Invalid syntax.")
-                input()
                 
+        #print('Grattis!')
+        #self.playing = False
+    
+    def placeSvart(self):
+        for x in range(0, self.board.xSize):                #Placerar ut raden med svarta bönder
+            board.set(self.board, x, 1, pawn("svart"))
+        
+        board.set(self.board, 0, 0, rook("svart"))          #Placerar resterande svarta pjäser
+        board.set(self.board, 1, 0, knight("svart"))
+        board.set(self.board, 2, 0, bishop("svart"))
+        board.set(self.board, 3, 0, queen("svart"))
+        board.set(self.board, 4, 0, king("svart"))
+        board.set(self.board, 5, 0, bishop("svart"))
+        board.set(self.board, 6, 0, knight("svart"))
+        board.set(self.board, 7, 0, rook("svart"))
+                
+    def placeVit(self):
+        for x in range(0, self.board.xSize):                #Placerar ut raden med vita bönder
+            board.set(self.board, x, self.board.ySize-2, pawnV("vit"))
 
-        if command == "help":
-            print("move, moves a piece.\nstop, exits the program")
-            input()
+        board.set(self.board, 0, 7, rook("vit"))            #Placerar resterande vita pjäser
+        board.set(self.board, 1, 7, knight("vit"))
+        board.set(self.board, 2, 7, bishop("vit"))
+        #print(self.board.get(2,7))
+        board.set(self.board, 3, 7, queen("vit"))
+        board.set(self.board, 4, 7, king("vit"))
+        board.set(self.board, 5, 7, bishop("vit"))
+        board.set(self.board, 6, 7, knight("vit"))
+        board.set(self.board, 7, 7, rook("vit"))
 
-        if command == "stop":
+    def commandInput(self):                                 #Tar inputs från användare.
+        posOrg = ''
+        oldPos = ''
+        command = ''
+        command = input("Vad vill "+self.currentTeam+" göra?(move, help eller stop): ")
+            
+        if command == "move":                               #Hanterar förflyttning av pjäser.
+            posOrg = input("Position av pjäs du vill flytta: ")
+
+            if ',' in posOrg:
+                oldPos = posOrg.split(',')
+                if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam:
+                    if len(self.legalmove(int(oldPos[0]),int(oldPos[1]))) != 0:
+                        self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1])))
+                    else:
+                        print('inga lagliga drag tillgängliga')
+                        return False
+                else:
+                    print("Inte din pjäs att flytta. -2")
+                    return False
+            else:
+                print("Fel formattering, glöm inte ','")
+                return False
+            
+            posNew = input("Positionen du vill flytta den till: ")
+
+            if ',' in posNew:
+                newPos = posNew.split(',')
+                try:
+                    self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]))
+                except IndexError:
+                    print("Värdet är utanför brädet. -4")
+                  #  posNew = input("Positionen du vill flytta den till: ")
+                except ValueError:
+                    print("Ogiltigt val. -5")
+                    return False
+                    #posNew = input("Positionen du vill flytta den till: ")
+            else:
+                print("Ogiltigt val. -3")
+                return False
+
+        elif command == "help":                               #Visar instruktioner
+            print("'move', anger vilken pjäs du vill flytta och vart. \nförsta koordinaten anger kolonn och andra rad, räkning från 0 till 7. \nExempelvis väljs bonden framför vits kung genom '4,6'  \n'stop', avslutar programmet \n ")
+            oldPos = ''
+            return False
+
+        elif command == "stop":                               #Avslutar programmet
             self.playing = False
 
+        else:
+            print("Felaktigt val")
+            return False
 
-    def whiteTurn(self):
-        self.currentTeam = "white"
+        return True
+
+    def VitTurn(self):                                      #Kontrollerar om det är vits tur att spela
+        self.currentTeam = "vit"
         self.board.printBoard()
-        self.commandInput()
+        self.isCheckMate()
+        while self.commandInput() == False:
+            continue
         
-    def blackTurn(self):
-        self.currentTeam = "black"
+    def SvartTurn(self):                                    #Kontrollerar om det är svarts tur att spela
+        self.currentTeam = "svart"
         self.board.printBoard()
-        self.commandInput()
+        self.isCheckMate()
+        while self.commandInput() == False:
+            continue
 
 
-    def startGame(self):
-
+    def startGame(self):                                    #Startar spelet
         self.playing = True
-        self.placeBlack()
-        self.placeWhite()
+        self.placeSvart()
+        self.placeVit()
 
         while self.playing:
             if self.playing:
-                self.whiteTurn()
+                self.VitTurn()
             if self.playing:
-                self.blackTurn()
+                self.SvartTurn()
 
-            
-    
-
-class piece: #Kontrollerar färg, samt hjälper att rensa efter flyttning.
-
+class piece:                                                #Kontrollerar färg, samt hjälper att rensa efter flyttning.
     symbol = '0'
+    movements = []
+    attack = []
     def __init__(self, team):
-        if team == "black" or team == "white" or team == "none":
+        if team == "svart" or team == "vit" or team == "none":
             self.team = team
         else:
             print(team + " is not a valid team.")
 
-    def isTeam(self, teamName): #Eventuellt behövs inte, kan kanske implementeras. OKLÖRT
-        return self.team == teamName
-
-class king(piece):
+class king(piece):                                          #Klass för kungen med möjliga drag
     symbol = 'K'
     movements = []
+    attack = movements
     for x in range(-1,2):
         movements.append([0,x])
         movements.append([x,0])
@@ -197,10 +295,12 @@ class king(piece):
         movements.append([x,-x])
         movements.append([-x,x])
         movements.append([-x,-x])
+        #if team == 'vit":      Möjlig if-sats för att styra färg direkt i klassen? 
         
-class queen(piece):
+class queen(piece):                                         #Klass för damen med möjliga drag
     symbol = 'Q'
     movements = []
+    attack = movements
     for x in range(-8,8):
         movements.append([0,x])
         movements.append([x,0])
@@ -209,56 +309,63 @@ class queen(piece):
         movements.append([-x,x])
         movements.append([-x,-x])
 
-class rook(piece):
+class rook(piece):                                          #Klass för tornet med möjliga drag
     symbol = 'R'
     movements = []
+    attack = movements
     for x in range(-8,8):    #fundera om förbättring, för att bli mer scaleable
         movements.append([0,x])
         movements.append([x,0])
-  #  print(movements)
+    #print(movements)
 
-class bishop(piece):
+class bishop(piece):                                        #Klass för löpare med möjliga drag
     symbol = 'B'
     movements = []
+    attack = movements
     for x in range(-8,8): 
         movements.append([x,x])
         movements.append([x,-x])
         movements.append([-x,x])
         movements.append([-x,-x])
-
-class knight(piece):
+    
+class knight(piece):                                        #Klass för springare med möjliga drag
     symbol = 'N'
     movements = [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[2,-1],[-2,-1],[-2,1]]
-    print(movements)
+    attack = movements
+    #print(movements)
 
-class pawn(piece):
+class pawnV(piece):                                         #Klass för bonde med möjliga drag
+    symbol = 'p'
+    attack = [[1,-1],[-1,-1]]
+    movements = [[0,-1],[0,0]]
+
+class pawn(piece):                                          #Klass för bonde med möjliga drag
     symbol = 'P'
-    movements = [[0,-1], [0,1]]
-    
-def main():
-    b = board(8, 8)
-    g = game(b)
-    g.startGame()
+    attack = [[1,1],[-1,1]]
+    movements = [[0,1],[0,0]]
 
+
+#class meny():
+ #   input
+
+def make2dList(rows, cols): #Skapar en 2d-lista
+    return [ ([0] * cols) for row in range(rows) ]
+
+def cls(): #Överflödig? Möjliggör att använda i Windows. Clear för unix.
+    os.system('cls' if os.name=='nt' else 'clear')
+
+def main():
+    b = board(8, 8) #objekt av klassen board -> Objektorienterad-programmering;):* 
+    g = game(b) #objekt av klassen game      -^
+    g.startGame()
+    
 if __name__ == "__main__":
     main()
 
-
-
-
-#to-do: def whiteTurn at start of game after placing teams. move current inputs to another def, do move method, if piece at first position isTeam("white") do move as usual
-#if !isTeam("white") print("Invalid piece"), at end of def whiteTurn return and then next in startgame is def blackTurn which does the same except with black team.
-#
-#       def startgame:
-#           self.playing = True
-#           self.placeBlack()
-#           self.placeWhite()
-#           while self.playing:
-#               self.whiteTurn()
-#               self.blackTurn()
-#               self.board.printBoard()
-#
-#
-#
-#to-do: change commandInput method to only have start and stop commands and make movementInput method which just does the movement and can do stop as well, call commandInput once before self.playing is set to true
-#at the start of whiteTurn and blackTurn use movementInput call instead of commandInput to bypass initial menu.
+#__________________________________________________________________________________________
+#To do:
+# 
+#VS-code, python-plugin
+#Ett statiskt spelbräde?
+#Eventuellt hårdkoda in rutornas namn? ex a12 = [0,6]
+    #Buggar:
