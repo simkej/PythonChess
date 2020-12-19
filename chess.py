@@ -1,4 +1,4 @@
-'''P-uppgift, spelar schack'''
+'''P-uppgift, ett förenklat schack-spel som '''
 import os
 import copy
 
@@ -16,7 +16,6 @@ class board:
 
     def printBoard(self):
         '''Skriver ut brädet'''
-        #cls()
         for x in self.boardObj:
             line = ""      
             for i in x:
@@ -154,15 +153,12 @@ class game:
         return NewMoves
 
     def isCheck(self, board):
-        print('new')
         '''kontrollerar om schack uppstått '''
         Hot = []
         Egen = []
         HotMove = []
         EgenMove = []
         kungPos = []
-        result = []
-        counter = 0
         x = 0
         y = 0
         for brede in board.boardObj:
@@ -183,21 +179,37 @@ class game:
             if self.currentTeam == "svart":
                 HotMove = HotMove + self.legalmove(piece[0],piece[1], "vit", board)
 
+        if self.linsok(HotMove, kungPos):
+             return "Schack"
+        else:
+            return False
+        
+    def isCheckMate(self, board):
+        Egen = []
+        EgenMove = []
+        counter = 0
+        x = 0
+        y = 0
+        for brede in board.boardObj:
+            x = 0
+            for piece in brede:
+                if piece.team == self.currentTeam:
+                    Egen.append([x,y])
+                x += 1
+            y += 1
+
         for piece in Egen:
             EgenMove = EgenMove + self.legalmove(piece[0],piece[1], self.currentTeam, board)
-        #print(EgenMove)
 
-        if self.linsok(HotMove, kungPos):
-            for elem in EgenMove:
-                board2 = copy.deepcopy(board)
-                board2.set(elem[0],elem[1], pawn(self.currentTeam))
-                if self.isCheck(board2) == False and counter < 64:
-                    counter += 1
-                    return True
-                
-        else:
-            #print('test')
-            return False
+        for move in EgenMove:
+            board2 = copy.deepcopy(board)
+            board2.set(move[0], move[1], pawn(self.currentTeam))
+            if self.isCheck(board2) == "Schack":
+                continue
+            else:
+                counter += 1
+        if counter == 0:
+            return True
               
     def linsok(self, lista, elem): #Anger om givet element finns i listan
         for char in lista:
@@ -214,8 +226,8 @@ class game:
         board.set(self.board, 1, 0, knight("svart"))
         board.set(self.board, 2, 0, bishop("svart"))
         board.set(self.board, 3, 0, queen("svart"))
-        board.set(self.board, 1, 2, king("svart"))
-       # board.set(self.board, 4, 0, king("svart"))
+        #board.set(self.board, 1, 2, king("svart"))
+        board.set(self.board, 4, 0, king("svart"))
         board.set(self.board, 5, 0, bishop("svart"))
         board.set(self.board, 6, 0, knight("svart"))
         board.set(self.board, 7, 0, rook("svart"))
@@ -229,8 +241,8 @@ class game:
         board.set(self.board, 1, 7, knight("vit"))
         board.set(self.board, 2, 7, bishop("vit"))
         board.set(self.board, 3, 7, queen("vit"))
-        board.set(self.board, 3, 2, queen("vit"))
-        board.set(self.board, 2, 3, queen("vit"))
+        #board.set(self.board, 3, 2, queen("vit"))
+        #board.set(self.board, 2, 3, queen("vit"))
         board.set(self.board, 4, 7, king("vit"))
         board.set(self.board, 5, 7, bishop("vit"))
         board.set(self.board, 6, 7, knight("vit"))
@@ -238,12 +250,12 @@ class game:
 
     def commandInput(self):
         '''Tar inputs från användare.'''
-        #if self.isCheck(self.board) == "Matt":
-         #   print('Schack-Matt! Du förlorar wää :/') 
-          #  return False
-        if self.isCheck(self.board) == True: 
+        if self.isCheckMate(self.board) == True:
+            print('Schack-Matt!' + self.currentTeam + ' förlorar wää :/')
+            self.playing = False
+            return True
+        if self.isCheck(self.board) == "Schack": 
             print(self.currentTeam + ' är i Schack!') 
-        #self.isCheck(self.board)
         board2 = copy.deepcopy(self.board)
         posOrg = ''
         oldPos = ''
@@ -292,7 +304,7 @@ class game:
 
         elif command == "help":
             '''Visar instruktioner'''
-            print("Detta program kör en förenklad version av schack, alla pjäser kan röra sig som vanligt men vissa features saknas, dessa är: \n En passant, Rockad och bondens första två steg.\n'move', anger vilken pjäs du vill flytta och vart. \nförsta koordinaten anger kolonn och andra rad, räkning från 0 till 7. \nExempelvis väljs bonden framför vits kung genom '4,6'  \n'stop', avslutar programmet \n ")
+            print("Detta program kör en förenklad version av schack, alla pjäser kan röra sig som vanligt men vissa features saknas, dessa är: \nEn passant, Rockad och bondens första två steg.\n'move', anger vilken pjäs du vill flytta och vart. \nförsta koordinaten anger kolonn och andra rad, räkning från 0 till 7. \nExempelvis väljs bonden framför vits kung genom '4,6'  \n'stop', avslutar programmet \n ")
             return False
 
         elif command == "stop":
