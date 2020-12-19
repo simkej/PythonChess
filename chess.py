@@ -1,11 +1,12 @@
 '''P-uppgift, spelar schack'''
 import os
+import copy
 
 class board:
     '''Class för att skapa samt rita brädet'''
 
     def __init__(self, xSize, ySize):
-
+        '''Skapar brädet'''
         self.xSize = xSize
         self.ySize = ySize
         self.boardObj = make2dList(self.xSize, self.ySize)
@@ -15,7 +16,7 @@ class board:
 
     def printBoard(self):
         '''Skriver ut brädet'''
-        cls()
+        #cls()
         for x in self.boardObj:
             line = ""      
             for i in x:
@@ -50,23 +51,23 @@ class game:
         self.board = board
         self.currentTeam = "vit"
     
-    def move(self, xOrg, yOrg, xNew, yNew):
+    def move(self, xOrg, yOrg, xNew, yNew, board):
         '''Förflyttar pjäs, mha get och set.'''
-        legalmove = self.legalmove(xOrg, yOrg, self.currentTeam)
+        legalmove = self.legalmove(xOrg, yOrg, self.currentTeam, board)
         wantedmove = [xNew, yNew]
         if wantedmove in legalmove:
-            movingPiece = self.board.get(xOrg, yOrg)            
-            self.board.set(xOrg, yOrg, piece("none"))
-            self.board.set(xNew, yNew, movingPiece)
+            movingPiece = board.get(xOrg, yOrg)            
+            board.set(xOrg, yOrg, piece("none"))
+            board.set(xNew, yNew, movingPiece)
         else:
             print("Ej lagligt drag")
             return False  
 
-    def legalmove(self, xOrg, yOrg, Team):
+    def legalmove(self, xOrg, yOrg, Team, board):
         '''Bestämmer lagliga moves för pieces genom manipulering och jämförelse av listor.
            Först skapas en lista som populeras av möjliga drag för vald pjäs,
            Sedan två listor med koordinater för alla "motståndare" samt alla "lagkamrater" som står på möjliga drag för pjäsen'''
-        piece = self.board.get(xOrg, yOrg)
+        piece = board.get(xOrg, yOrg)
         moves = []
         upptagen = []
         motståndare = []
@@ -80,19 +81,18 @@ class game:
         Y_X = []
         NewMoves = []
         for i in piece.movements:
-            if self.board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 and [xOrg,yOrg] != [xOrg+i[0],yOrg+i[1]]:
+            if board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 and [xOrg,yOrg] != [xOrg+i[0],yOrg+i[1]]:
                 moves.append([xOrg+i[0],yOrg+i[1]])
-                moves.sort()
-                if self.board.get(xOrg+i[0],yOrg+i[1]).team != "none":     
-                    if self.board.get(xOrg+i[0],yOrg+i[1]).team != Team:
+                if board.get(xOrg+i[0],yOrg+i[1]).team != "none":     
+                    if board.get(xOrg+i[0],yOrg+i[1]).team != Team:
                         motståndare.append([xOrg+i[0],yOrg+i[1]])  
-                    if self.board.get(xOrg+i[0],yOrg+i[1]).team == Team:
+                    if board.get(xOrg+i[0],yOrg+i[1]).team == Team:
                         upptagen.append([xOrg+i[0],yOrg+i[1]])
 
         for i in piece.attack:
-            if self.board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 :
-               if self.board.get(xOrg+i[0],yOrg+i[1]).team != "none":
-                   if self.board.get(xOrg+i[0],yOrg+i[1]).team != Team:
+            if board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 :
+               if board.get(xOrg+i[0],yOrg+i[1]).team != "none":
+                   if board.get(xOrg+i[0],yOrg+i[1]).team != Team:
                     moves.append([xOrg+i[0],yOrg+i[1]])
 
         for pos in moves:
@@ -153,39 +153,51 @@ class game:
                 NewMoves.append(pos)
         return NewMoves
 
-    def isCheck(self):
+    def isCheck(self, board):
+        print('new')
         '''kontrollerar om schack uppstått '''
         Hot = []
+        Egen = []
         HotMove = []
+        EgenMove = []
         kungPos = []
+        result = []
+        counter = 0
         x = 0
         y = 0
-        for brede in self.board.boardObj:
+        for brede in board.boardObj:
             x = 0
             for piece in brede:
                 if piece.team != self.currentTeam and piece.team != "none":
                     Hot.append([x,y])
-                if piece.team == self.currentTeam and type(piece) is king:
-                    kungPos = [x,y]
+                if piece.team == self.currentTeam:
+                    Egen.append([x,y])
+                    if type(piece) is king:
+                        kungPos = [x,y]
                 x += 1
             y += 1
         
         for piece in Hot:
             if self.currentTeam == "vit":
-                HotMove = HotMove + self.legalmove(piece[0],piece[1], "svart")
+                HotMove = HotMove + self.legalmove(piece[0],piece[1], "svart", board)
             if self.currentTeam == "svart":
-                HotMove = HotMove + self.legalmove(piece[0],piece[1], "vit")
+                HotMove = HotMove + self.legalmove(piece[0],piece[1], "vit", board)
 
-        if self.linsok(HotMove, kungPos): #
-            return "Schack" #
-        else: #
-            return False #
+        for piece in Egen:
+            EgenMove = EgenMove + self.legalmove(piece[0],piece[1], self.currentTeam, board)
+        #print(EgenMove)
 
-        if self.linsok(HotMove, self.legalmove(kungPos[0], kungPos[1])): #
-            print('knork') #
-            return False #
-        else: #
-            return "Matt!" #
+        if self.linsok(HotMove, kungPos):
+            for elem in EgenMove:
+                board2 = copy.deepcopy(board)
+                board2.set(elem[0],elem[1], pawn(self.currentTeam))
+                if self.isCheck(board2) == False and counter < 64:
+                    counter += 1
+                    return True
+                
+        else:
+            #print('test')
+            return False
               
     def linsok(self, lista, elem): #Anger om givet element finns i listan
         for char in lista:
@@ -217,8 +229,8 @@ class game:
         board.set(self.board, 1, 7, knight("vit"))
         board.set(self.board, 2, 7, bishop("vit"))
         board.set(self.board, 3, 7, queen("vit"))
-        board.set(self.board, 4, 2, queen("vit"))
-        board.set(self.board, 4, 3, queen("vit"))
+        board.set(self.board, 3, 2, queen("vit"))
+        board.set(self.board, 2, 3, queen("vit"))
         board.set(self.board, 4, 7, king("vit"))
         board.set(self.board, 5, 7, bishop("vit"))
         board.set(self.board, 6, 7, knight("vit"))
@@ -226,11 +238,13 @@ class game:
 
     def commandInput(self):
         '''Tar inputs från användare.'''
-        if self.isCheck() == "Matt":
-            print('Schack-Matt! Du förlorar wää :/') #
-            self.playing = False #
-        if self.isCheck() == "Schack": #
-            print('Schack!') #
+        #if self.isCheck(self.board) == "Matt":
+         #   print('Schack-Matt! Du förlorar wää :/') 
+          #  return False
+        if self.isCheck(self.board) == True: 
+            print(self.currentTeam + ' är i Schack!') 
+        #self.isCheck(self.board)
+        board2 = copy.deepcopy(self.board)
         posOrg = ''
         oldPos = ''
         command = ''
@@ -239,12 +253,12 @@ class game:
         if command == "move":
             '''Hanterar förflyttning av pjäser.'''
             posOrg = input("Position av pjäs du vill flytta: ")
-
+            
             if ',' in posOrg:
                 oldPos = posOrg.split(',')
                 if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam:
-                    if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam)) != 0:
-                        self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam))
+                    if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board)) != 0:
+                        self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board))
                     else:
                         print('inga lagliga drag tillgängliga')
                         return False
@@ -259,13 +273,19 @@ class game:
             if ',' in posNew:
                 newPos = posNew.split(',')
                 try:
-                    return self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]))
+                    self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]), board2)
+                    if self.isCheck(board2) == False:
+                        print('knark')
+                        return self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]), self.board)
+                    else:
+                        print('Du är i schack simon')
+                        return False
                 except IndexError:
                     print("Värdet är utanför brädet. -4")
                     return False
                 except ValueError:
                     print("Ogiltigt val. -5")
-                    return False
+                    return False    
             else:
                 print("Ogiltigt val. -3")
                 return False
@@ -287,7 +307,6 @@ class game:
     def VitTurn(self):
         '''Kontrollerar om det är vits tur att spela'''
         self.currentTeam = "vit"
-        self.isCheck()
         self.board.printBoard()
         while self.commandInput() == False:
             continue
@@ -295,7 +314,6 @@ class game:
     def SvartTurn(self):
         '''Kontrollerar om det är svarts tur att spela'''
         self.currentTeam = "svart"
-        self.isCheck()
         self.board.printBoard()
         while self.commandInput() == False:
             continue
@@ -385,8 +403,6 @@ class pawn(piece):
     symbol = 'P'
     attack = [[1,1],[-1,1]]
     movements = [[0,1],[0,0]]
-
-
 
 def make2dList(rows, cols):
     '''Skapar en 2d-lista, behövs för att skapa brädet'''
