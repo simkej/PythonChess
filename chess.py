@@ -38,7 +38,7 @@ class board:
         try:
             return self.boardObj[yPos][xPos]
         except IndexError:
-            return #Fixa error-meddelande
+            return
 
     def set(self, xPos, yPos, value):
         '''Placerar ut ny position'''
@@ -185,6 +185,7 @@ class game:
             return False
         
     def isCheckMate(self, board):
+        '''kontrollerar om Schack-matt uppstår mha isCheck'''
         Egen = []
         EgenMove = []
         counter = 0
@@ -211,7 +212,8 @@ class game:
         if counter == 0:
             return True
               
-    def linsok(self, lista, elem): #Anger om givet element finns i listan
+    def linsok(self, lista, elem):
+        '''linjär sökning efter givet element i given lista'''
         for char in lista:
             if char[0] == elem[0] and char[1] == elem[1]:
                 return True
@@ -226,7 +228,6 @@ class game:
         board.set(self.board, 1, 0, knight("svart"))
         board.set(self.board, 2, 0, bishop("svart"))
         board.set(self.board, 3, 0, queen("svart"))
-        #board.set(self.board, 1, 2, king("svart"))
         board.set(self.board, 4, 0, king("svart"))
         board.set(self.board, 5, 0, bishop("svart"))
         board.set(self.board, 6, 0, knight("svart"))
@@ -241,15 +242,13 @@ class game:
         board.set(self.board, 1, 7, knight("vit"))
         board.set(self.board, 2, 7, bishop("vit"))
         board.set(self.board, 3, 7, queen("vit"))
-        #board.set(self.board, 3, 2, queen("vit"))
-        #board.set(self.board, 2, 3, queen("vit"))
         board.set(self.board, 4, 7, king("vit"))
         board.set(self.board, 5, 7, bishop("vit"))
         board.set(self.board, 6, 7, knight("vit"))
         board.set(self.board, 7, 7, rook("vit"))
 
     def commandInput(self):
-        '''Tar inputs från användare.'''
+        '''Tar inputs från användare,.'''
         if self.isCheckMate(self.board) == True:
             print('Schack-Matt!' + self.currentTeam + ' förlorar wää :/')
             self.playing = False
@@ -263,19 +262,22 @@ class game:
         command = input("Vad vill "+self.currentTeam+" göra?(move, help eller stop): ")
         
         if command == "move":
-            '''Hanterar förflyttning av pjäser.'''
             posOrg = input("Position av pjäs du vill flytta: ")
             
             if ',' in posOrg:
                 oldPos = posOrg.split(',')
-                if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam:
-                    if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board)) != 0:
-                        self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board))
+                if int(oldPos[0]) <= self.board.xSize or int(oldPos[1]) <= self.board.ySize:
+                    if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam:
+                        if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board)) != 0:
+                            self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board))
+                        else:
+                            print('inga lagliga drag tillgängliga')
+                            return False
                     else:
-                        print('inga lagliga drag tillgängliga')
+                        print("Inte din pjäs att flytta. -2")
                         return False
                 else:
-                    print("Inte din pjäs att flytta. -2")
+                    print('Ogiltigt drag')
                     return False
             else:
                 print("Fel formattering, glöm inte ','")
@@ -287,19 +289,18 @@ class game:
                 try:
                     self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]), board2)
                     if self.isCheck(board2) == False:
-                        print('knark')
                         return self.move(int(oldPos[0]), int(oldPos[1]), int(newPos[0]), int(newPos[1]), self.board)
                     else:
-                        print('Du är i schack simon')
+                        print('Ej giltigt drag. Din kung är fortfarande i Schack!')
                         return False
                 except IndexError:
-                    print("Värdet är utanför brädet. -4")
+                    print("Värdet är utanför brädet.")
                     return False
                 except ValueError:
-                    print("Ogiltigt val. -5")
+                    print("Ogiltigt val.")
                     return False    
             else:
-                print("Ogiltigt val. -3")
+                print("Ogiltigt val.")
                 return False
 
         elif command == "help":
