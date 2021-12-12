@@ -1,22 +1,21 @@
-'''P-uppgift, för kursen DD1331 HT20, av Emil Öhlund. Programmet är ett förenklat schack-spel som huvudsakligen bygger på manipulation av listor.'''
+'''P-uppgift, ett förenklat schack-spel som '''
 import os
 import copy
 
 class board:
     '''Class för att skapa samt rita brädet'''
 
-    def __init__(self, xSize, ySize): 
+    def __init__(self, xSize, ySize):
         '''Skapar brädet'''
         self.xSize = xSize
         self.ySize = ySize
         self.boardObj = make2dList(self.xSize, self.ySize)
-        for y in range(0, self.ySize): #Från 0 till self.ySize, populerar listan
+        for y in range(0, self.ySize):
             for x in range(0, self.xSize):
                 self.set(x, y, piece("none"))
 
     def printBoard(self):
         '''Skriver ut brädet'''
-        cls()
         for x in self.boardObj:
             line = ""      
             for i in x:
@@ -29,11 +28,10 @@ class board:
         for x in moves:
             if self.get(int(x[0]),int(x[1])).symbol != 'X':
                 ursprBoard.append([int(x[0]),int(x[1]),self.get(int(x[0]),int(x[1])).symbol])
-                self.get(int(x[0]),int(x[1])).symbol = 'X' 
-        self.printBoard() #Ritar ut brädet med X på varje möjligt drag
+                self.get(int(x[0]),int(x[1])).symbol = 'X'
+        self.printBoard()
         for x in ursprBoard:
-            self.get(int(x[0]),int(x[1])).symbol = x[2] #x = [x-koord, y-koord, symbol] = [0, 1, 2] -> x[2]=symbol          Vi tilldelar typ av pjäs. 
-            #^återställer så vi inte har x på brädet 
+            self.get(int(x[0]),int(x[1])).symbol = x[2]       
 
     def get(self, xPos, yPos):
         '''Hämtar nuvarande position i lista'''
@@ -44,7 +42,7 @@ class board:
 
     def set(self, xPos, yPos, value):
         '''Placerar ut ny position'''
-        self.boardObj[yPos][xPos] = value #value är objekt av klassen "piece".
+        self.boardObj[yPos][xPos] = value
 
 class game:
     '''Klass som hanterar spelreglerna, styr förflyttningar och kontrollerar om schack och eller matt uppstår'''
@@ -54,12 +52,12 @@ class game:
     
     def move(self, xOrg, yOrg, xNew, yNew, board):
         '''Förflyttar pjäs, mha get och set.'''
-        legalmove = self.legalmove(xOrg, yOrg, self.currentTeam, board) #Kontrollerar alla lagliga drag för vald pjäs på positionen den befinner sig
+        legalmove = self.legalmove(xOrg, yOrg, self.currentTeam, board)
         wantedmove = [xNew, yNew]
-        if wantedmove in legalmove:                 #Kontrollerar så att önskat drag är lagligt
-            movingPiece = board.get(xOrg, yOrg)     #Hittar positionen av vald pjäs         
-            board.set(xOrg, yOrg, piece("none"))    #Tar bort pjäsen från gamla positionen
-            board.set(xNew, yNew, movingPiece)      #Placerar den på den nya positionen
+        if wantedmove in legalmove:
+            movingPiece = board.get(xOrg, yOrg)            
+            board.set(xOrg, yOrg, piece("none"))
+            board.set(xNew, yNew, movingPiece)
         else:
             print("Ej lagligt drag")
             return False  
@@ -68,38 +66,36 @@ class game:
         '''Bestämmer lagliga moves för pieces genom manipulering och jämförelse av listor.
            Först skapas en lista som populeras av möjliga drag för vald pjäs,
            Sedan två listor med koordinater för alla "motståndare" samt alla "lagkamrater" som står på möjliga drag för pjäsen'''
-        piece = board.get(xOrg, yOrg)   #Identifierar typ av pjäs
-        moves = []                      #Skapar lista för att lagra drag
-        upptagen = []                   #Skapar lista för att lagra vilka positioner som populeras av ens egna pjäser
-        motståndare = []                #Skapar lista för att lagra vilka positioner som populeras av motståndarens pjäser
-        
-        '''Nedanstående listor skapas för att dela upp brädet relativt den valda pjäsen'''
-        XY = []                         #De pjäser med x < vald och y < vald          
-        Xy = []                         #De pjäser med x < vald och y > vald
-        xY = []                         #De pjäser med x > vald och y < vald
-        xy = []                         #De pjäser med x > vald och y > vald
-        X_y = []                        #De pjäser med x = vald och y < vald
-        X_Y = []                        #De pjäser med x = vald och y > vald
-        Y_x = []                        #De pjäser med x < vald och y = vald
-        Y_X = []                        #De pjäser med x > vald och y = vald
+        piece = board.get(xOrg, yOrg)
+        moves = []
+        upptagen = []
+        motståndare = []
+        XY = []
+        Xy = []
+        xY = []
+        xy = []
+        X_y = []
+        X_Y = []
+        Y_x = []
+        Y_X = []
         NewMoves = []
         for i in piece.movements:
-            if board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 and [xOrg,yOrg] != [xOrg+i[0],yOrg+i[1]]: #kolla så att vi inte hamnar utanför brädet
-                moves.append([xOrg+i[0],yOrg+i[1]])                                     #Här populerar vi listan med tillåtna drag
-                if board.get(xOrg+i[0],yOrg+i[1]).team != "none":                       #Resterande bedömer vilken lista positionen ska appendas till, motståndare eller lagkamrat
+            if board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 and [xOrg,yOrg] != [xOrg+i[0],yOrg+i[1]]:
+                moves.append([xOrg+i[0],yOrg+i[1]])
+                if board.get(xOrg+i[0],yOrg+i[1]).team != "none":     
                     if board.get(xOrg+i[0],yOrg+i[1]).team != Team:
                         motståndare.append([xOrg+i[0],yOrg+i[1]])  
                     if board.get(xOrg+i[0],yOrg+i[1]).team == Team:
                         upptagen.append([xOrg+i[0],yOrg+i[1]])
 
-        for i in piece.attack:                                              #Behövs essentially för att kunna möjliggöra hur bönderna "attackerar" på diagonalen men endast kan gå "framåt"
+        for i in piece.attack:
             if board.get(xOrg+i[0],yOrg+i[1]) is not None and int(xOrg+i[0])>-1 and int(yOrg+i[1])>-1 :
                if board.get(xOrg+i[0],yOrg+i[1]).team != "none":
                    if board.get(xOrg+i[0],yOrg+i[1]).team != Team:
                     moves.append([xOrg+i[0],yOrg+i[1]])
 
         for pos in moves:
-            '''Delar upp brädet för att identifiera var andra pjäser står relativt den valda''' #Behövs för att inte kunna 'hoppa över' andra pjäser, delar upp brädet i mindre delar. 
+            '''Delar upp brädet för att identifiera var andra pjäser står relativt den valda'''
             if [xOrg] > [pos[0]]:
                 if [yOrg] > [pos[1]]:
                     XY.append(pos)
@@ -124,25 +120,25 @@ class game:
         XY.sort() #De pjäser med x < vald och y < vald
         Xy.sort() #De pjäser med x < vald och y > vald
         xY.sort() #De pjäser med x > vald och y < vald
-        xy.sort() #De pjäser med x > vald och y > vald
+        xy.sort() #De pjäser med x = vald och y > vald
         X_Y.sort() #De pjäser med x = vald och y < vald
         X_y.sort() #De pjäser med x = vald och y > vald
         Y_X.sort() #De pjäser med x < vald och y = vald
         Y_x.sort() #De pjäser med x > vald och y = vald
 
-        '''Nyttjar positionCheck-funktionen för att avgöra när en pjäs inte kan gå längre'''
-        NewMoves += self.positionCheck(xOrg, yOrg, XY[::-1], motståndare, upptagen) #kontrollerar listan i motsatt ordning [::-1]
-        NewMoves += self.positionCheck(xOrg, yOrg, Xy[::-1], motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, xY, motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, xy, motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, X_Y[::-1], motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, X_y, motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, Y_X[::-1], motståndare, upptagen)
-        NewMoves += self.positionCheck(xOrg, yOrg, Y_x, motståndare, upptagen)
-        moves = NewMoves                        #Allt vi gjort från rad 100-142 är att justera listan med tillåtna drag så att drag som befinner sig bakom en annan pjäs tas bort från moves.
+        '''Nyttjar kolla-funktionen för att avgöra när en pjäs inte kan gå längre'''
+        NewMoves += self.kolla(xOrg, yOrg, XY[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, Xy[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, xY, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, xy, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, X_Y[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, X_y, motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, Y_X[::-1], motståndare, upptagen)
+        NewMoves += self.kolla(xOrg, yOrg, Y_x, motståndare, upptagen)
+        moves = NewMoves
         return moves
 
-    def positionCheck(self, xOrg, yOrg, li, motståndare, upptagen):
+    def kolla(self, xOrg, yOrg, li, motståndare, upptagen):
         '''Kontrollerar om någon av rutorna pjäsen kan flyttas till är populerad av motståndare eller egen pjäs
            När en motståndar-pjäs stöts på appendas den positionen så att en fortfarande kan ta den'''
         NewMoves = []
@@ -157,10 +153,11 @@ class game:
         return NewMoves
 
     def isCheck(self, board):
-        '''kontrollerar om schack uppstått genom att skapa en lista med alla drag moståndaren kan göra samt en med kungens position,
-           sedan används linjärsökning för att se om kungens position ligger i motståndarens drag.'''
+        '''kontrollerar om schack uppstått '''
         Hot = []
+        Egen = []
         HotMove = []
+        EgenMove = []
         kungPos = []
         x = 0
         y = 0
@@ -169,7 +166,8 @@ class game:
             for piece in brede:
                 if piece.team != self.currentTeam and piece.team != "none":
                     Hot.append([x,y])
-
+                if piece.team == self.currentTeam:
+                    Egen.append([x,y])
                     if type(piece) is king:
                         kungPos = [x,y]
                 x += 1
@@ -187,9 +185,7 @@ class game:
             return False
         
     def isCheckMate(self, board):
-        '''kontrollerar om Schack-matt uppstår, en kopia av brädet skapas och en lista med alla möjliga drag,
-           sedan kontrolleras varje möjligt drag i listan med isCheck. Om inget drag gör att isCheck inte returnerar "Schack" är det matt'''
-        #Kollar möjliga drag, om det inte finns något drag som inte retunerar schack så är du i matt. 
+        '''kontrollerar om Schack-matt uppstår mha isCheck'''
         Egen = []
         EgenMove = []
         counter = 0
@@ -212,8 +208,8 @@ class game:
             if self.isCheck(board2) == "Schack":
                 continue
             else:
-                counter += 1 #Plussar om drag som inte är schack kan göras.
-        if counter == 0: #Schack-matt
+                counter += 1
+        if counter == 0:
             return True
               
     def linsok(self, lista, elem):
@@ -252,7 +248,7 @@ class game:
         board.set(self.board, 7, 7, rook("vit"))
 
     def commandInput(self):
-        '''Större funktion. Kontrollerar om schack och/eller matt uppstår. Sedan tar den inputs från användare, kontrollerar att inputs har rätt format.'''
+        '''Tar inputs från användare,.'''
         if self.isCheckMate(self.board) == True:
             print('Schack-Matt!' + self.currentTeam + ' förlorar wää :/')
             self.playing = False
@@ -270,15 +266,15 @@ class game:
             
             if ',' in posOrg:
                 oldPos = posOrg.split(',')
-                if int(oldPos[0]) <= self.board.xSize or int(oldPos[1]) <= self.board.ySize: #Kontrollerar så valt position är del av brädet
-                    if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam: #Får inte flytta motståndare
-                        if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board)) != 0: #Man får inte flytta till samma position 
+                if int(oldPos[0]) <= self.board.xSize or int(oldPos[1]) <= self.board.ySize:
+                    if self.board.get(int(oldPos[0]), int(oldPos[1])).team == self.currentTeam:
+                        if len(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board)) != 0:
                             self.board.printLegalMoves(self.legalmove(int(oldPos[0]),int(oldPos[1]), self.currentTeam, self.board))
                         else:
-                            print('Inga lagliga drag tillgängliga')
+                            print('inga lagliga drag tillgängliga')
                             return False
                     else:
-                        print("Inte din pjäs att flytta.")
+                        print("Inte din pjäs att flytta. -2")
                         return False
                 else:
                     print('Ogiltigt drag')
@@ -319,7 +315,7 @@ class game:
         else:
             print("Felaktigt val")
             return False
-        return True #Om alla krav uppfylls, succé! 
+        return True
 
     def VitTurn(self):
         '''Kontrollerar om det är vits tur att spela'''
@@ -336,7 +332,7 @@ class game:
             continue
 
     def startGame(self):
-        '''Startar spelet''' #Håller spelet igång givet att self.playing är True
+        '''Startar spelet'''
         self.playing = True
         self.placeSvart()
         self.placeVit()
@@ -388,7 +384,7 @@ class rook(piece):
     symbol = 'R'
     movements = []
     attack = movements
-    for x in range(-8,8):
+    for x in range(-8,8):    #fundera om förbättring, för att bli mer scaleable
         movements.append([0,x])
         movements.append([x,0])
 
@@ -430,8 +426,8 @@ def cls():
     os.system('cls' if os.name=='nt' else 'clear')
 
 def main():
-    b = board(8, 8)
-    g = game(b)
+    b = board(8, 8) #objekt av klassen board -> Objektorienterad-programmering;):* 
+    g = game(b) #objekt av klassen game      -^
     g.startGame()
     
 if __name__ == "__main__":
